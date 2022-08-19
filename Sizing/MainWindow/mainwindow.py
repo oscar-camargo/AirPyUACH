@@ -66,9 +66,11 @@ class MainWindow(QMainWindow):
         tabPolicy.setHeightForWidth(self.tabwidget.sizePolicy().hasHeightForWidth())
         self.tabwidget.setSizePolicy(tabPolicy)
         self.tab = QWidget()
-        self.tabwidget.addTab(self.tab, "")
+        self.tabwidget.addTab(self.tab, "Weight Estimation")
         self.tab_2 = QWidget()
-        self.tabwidget.addTab(self.tab_2, "")
+        self.tabwidget.addTab(self.tab_2, "Constraint Diagram")
+        self.tab_3 = QWidget()
+        self.tabwidget.addTab(self.tab_3,'Wing Geometry')
 
         #------------------------------#
         
@@ -92,7 +94,23 @@ class MainWindow(QMainWindow):
         self.add_before_mission = QPushButton('Add Before',self.mission_layout_widget)
         self.add_after_mission = QPushButton('Add After',self.mission_layout_widget)
         self.remove_mission = QPushButton('Remove',self.mission_layout_widget)
+        
         self.table_mission = QTableWidget(1,2,self.mission_layout_widget)
+        self.table_mission.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)   
+        self.table_mission.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.missiontypeitem = QTableWidgetItem()
+        self.missionconditionitem = QTableWidgetItem()
+        self.missiontypeitem.setText('Type')
+        self.missionconditionitem.setText('Condition')
+        self.table_mission.setHorizontalHeaderItem(0,self.missiontypeitem)
+        self.table_mission.setHorizontalHeaderItem(1,self.missionconditionitem)
+        self.missiontypecombo = QComboBox()
+        self.missionconditioncombo = QComboBox()
+        self.table_mission.setCellWidget(0,0,self.missiontypecombo)
+        self.table_mission.setCellWidget(0,1,self.missionconditioncombo)
+        self.missiontypecombo.addItems(['Ground','Climb','Cruise','Descent','Hover','Single Point','Transition'])
+        self.missionconditioncombo.addItems(['Ground','Landing','Takeoff'])
+
         self.clear_mission = QPushButton('Clear All',self.mission_layout_widget)
         self.configure_mission = QPushButton('Configure',self.mission_layout_widget)
         self.save_mission = QPushButton('Save Mission',self.mission_layout_widget)
