@@ -29,6 +29,7 @@ Often enough, I found myself in a tight spot where there's just too much informa
 - [ ] Fidelity Two Performance Module
 - [ ] Fidelity Two Flight Mechanics Module
 - [ ] Fidelity Two Filter
+- [ ] Fidelity Zero Structural Module
 - [ ] Human-assisted Genetic Algorithms 
 
 # Reference Literature
