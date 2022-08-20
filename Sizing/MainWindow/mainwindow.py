@@ -234,8 +234,9 @@ class MainWindow(QMainWindow):
 
     def configmission(self):
         row_n = self.table_mission.rowCount()
+        types = [self.table_mission.cellWidget(i,0).currentText() for i in range(row_n)]
         conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(row_n)]
-        self.mission_configuration = ParametersWindow(row_n,conditions)
+        self.mission_configuration = ParametersWindow(row_n,types,conditions)
 
         #--------------------------#
 app = QApplication(sys.argv)
