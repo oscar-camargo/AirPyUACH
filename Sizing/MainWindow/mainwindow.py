@@ -1,14 +1,18 @@
 import sys 
+#This block is only necessary for me to develop the repo. Once all code is done, it shall be deleted, since normal usage of these tools will be done as a package
+sys.path.append('C:\\Users\\Oscar Camargo\\UACH\\AirPyUACH\\Sizing')
+#Not sure if this is the best method. If you want to help developing, modify the imports as you like.
+#
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
+from ParameterWindow.parameterwindow import ParametersWindow
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
         self.resize(1920,1080)
-        #self.parameters_window = ParametersWindow()
 
 
         #----Main Widget and Layout definition----#
@@ -160,6 +164,78 @@ class MainWindow(QMainWindow):
         #--------------------------------------------#
         
 
+        #--------UI Signals--------#
+        
+        QObject.connect(self.add_before_mission, SIGNAL('clicked()'),self.add_row_before_mission)
+        QObject.connect(self.add_after_mission, SIGNAL('clicked()'),self.add_row_after_mission)
+        QObject.connect(self.remove_mission, SIGNAL('clicked()'),self.mission_remove)
+        QObject.connect(self.clear_mission, SIGNAL('clicked()'),self.mission_clear)
+        QObject.connect(self.configure_mission,SIGNAL('clicked()'),self.configmission)
+        self.missiontypecombo.currentTextChanged.connect(self.combochange)
+        
+        
+        #--------------------------#
+
+
+        #---------UI Slots---------#
+
+    def add_row_before_mission(self):
+        if self.table_mission.currentRow() != 0:
+            combotype = QComboBox()
+            combotype.addItems(['Ground','Climb','Cruise','Descent','Hover','Single Point','Transition'])
+            comboconditions = QComboBox()
+            comboconditions.addItems(['Ground','Landing','Takeoff'])
+            self.table_mission.insertRow(self.table_mission.currentRow())
+            self.table_mission.setCellWidget(self.table_mission.currentRow()-1,0,combotype)
+            self.table_mission.setCellWidget(self.table_mission.currentRow()-1,1,comboconditions)
+            combotype.currentTextChanged.connect(self.combochange)
+
+    def add_row_after_mission(self):
+        combotype = QComboBox()
+        combotype.addItems(['Ground','Climb','Cruise','Descent','Hover','Single Point','Transition'])
+        comboconditions = QComboBox()
+        comboconditions.addItems(['Ground','Landing','Takeoff'])
+        self.table_mission.insertRow(self.table_mission.currentRow()+1)
+        self.table_mission.setCellWidget(self.table_mission.currentRow()+1,0,combotype)
+        self.table_mission.setCellWidget(self.table_mission.currentRow()+1,1,comboconditions)
+        combotype.currentTextChanged.connect(self.combochange)
+
+    def mission_remove(self):
+        if self.table_mission.currentRow() != 0:
+            self.table_mission.removeRow(self.table_mission.currentRow())
+        else:
+            pass
+
+    def mission_clear(self):
+        self.table_mission.setRowCount(1)
+
+    def combochange(self):
+        if self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Ground':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Ground','Landing','Takeoff'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Climb':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Constant CAS Constant Rate', 'Constant EAS Constant Rate', 'Constant M Constant Angle', 'Constant M Constant Rate', 'Constant M Linear altitude','Constant Throttle Constant Speed', 'Constant Speed Constant Angle', 'Constant Speed Constant Rate', 'Constant Speed Linear Altitude', 'Constant q Constant Angle', 'Constant q Constant Rate', 'Linear M Constant Rate', 'Linear Speed Constant Rate'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Cruise':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Constant Acc. Constant Alt.', 'Constant M Constant Alt.', 'Constant M Constant Alt. Loiter', 'Constant Pitch rate Constant Alt.', 'Constant Speed Constant Alt.', 'Constant Speed Constant Alt. Loiter', 'Constant Throttle Constant Alt.', 'Constant q Constant Alt.', 'Constant q Constant Alt. Loiter'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Descent':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Constant CAS Constant Rate', 'Constant EAS Constant Rate', 'Constant Speed Constant Angle', 'Constant Speed Constant Rate', 'Linear Mach Constant Rate'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Hover':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Climb','Descent','Hover'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Single Point':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['Set Speed Set Alt.', 'Set Speed Set Alt. NoProp', 'Set Speed Set Throttle'])
+        elif self.table_mission.cellWidget(self.table_mission.currentRow(),0).currentText() == 'Transition':
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).clear()
+            self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
+
+    def configmission(self):
+        self.configmission = ParametersWindow()
+
+        #--------------------------#
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()

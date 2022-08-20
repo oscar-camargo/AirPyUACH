@@ -25,7 +25,7 @@ Often enough, I found myself in a tight spot where there's just too much informa
 
 **The previous methods are intended for rapid development of design concepts. They're the most useful for small aircraft that are cheap to manufacture, in order to obtain experimental data more quickly**
 
-### Situational: Development of the following module depends on the amount of time I have (These require a TREMENDOUS amount of work)
+### Situational: Development of the following modules depends on the amount of time I have (These require a TREMENDOUS amount of work)
 - [ ] Fidelity Two Aerodynamics Module (Perhaps, linking a geometry to OpenFoam, SU2, or other CFD solvers)
 - [ ] Fidelity Two Performance Module
 - [ ] Fidelity Two Flight Mechanics Module (Numerically solve non-linear EoM?)
