@@ -233,7 +233,9 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
-        self.configmission = ParametersWindow()
+        row_n = self.table_mission.rowCount()
+        conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(row_n)]
+        self.mission_configuration = ParametersWindow(row_n,conditions)
 
         #--------------------------#
 app = QApplication(sys.argv)
