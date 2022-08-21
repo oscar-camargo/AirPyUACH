@@ -1,12 +1,12 @@
 import sys 
 #This block is only necessary for me to develop the repo. Once all code is done, it shall be deleted, since normal usage of these tools will be done as a package
-sys.path.append('C:\\Users\\Oscar Camargo\\UACH\\AirPyUACH\\Sizing')
+sys.path.append('C:\\Users\\Oscar Camargo\\UACH\\AirPyUACH')
 #Not sure if this is the best method. If you want to help developing, modify the imports as you like.
 #
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-from ParameterWindow.parameterwindow import ParametersWindow
+from Sizing.ParameterWindow.parameterwindow import ParametersWindow
 
 class MainWindow(QMainWindow):
 
@@ -57,6 +57,9 @@ class MainWindow(QMainWindow):
         self.analyseslayout.addWidget(self.tree,1,0,1,3)
         self.analyseslayout.addWidget(self.export_plots,2,0,1,3)
         self.analyseslayout.addWidget(self.export_data_csv,3,0,1,3)
+        self.analysis_types = []
+        self.analysis_conditions = []
+        self.analysis_conditions_parameters = []
         
         #------------------------------#
 

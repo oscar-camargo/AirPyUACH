@@ -12,12 +12,15 @@ class ParametersWindow(QWidget):
     def __init__(self,groupbox_n=1,types = [''],conditions=['']):
         super().__init__()
         self.setGeometry(QRect(100,100,1280,500))
-        mainlayout = QGridLayout(self)
+        self.mainlayout = QGridLayout(self)
         active_condition = {}
+        self.groupbox_n = groupbox_n
+        self.types = types
+        self.conditions = conditions
         for i in range(groupbox_n):
             active_groupbox = QGroupBox(conditions[i])
-            active_groupbox_layout = QGridLayout(active_groupbox)
-            mainlayout.addWidget(active_groupbox,0,i,1,1)
+            self.active_groupbox_layout = QGridLayout(active_groupbox)
+            self.mainlayout.addWidget(active_groupbox,0,i,1,1)
             if types[i] == 'Ground':
                 active_condition = ground._getmethod(stringbinarysearch( ground._conditions(), conditions[i] ))
                 active_condition.popitem()
@@ -44,16 +47,29 @@ class ParametersWindow(QWidget):
             for key,j in zip(active_condition,range(len(active_condition))):
                 dummylabel = QLabel('{}'.format(key))
                 dummyline = QLineEdit()
-                dummmycombo = QComboBox()
-                active_groupbox_layout.addWidget(dummylabel,j,0,1,1)
-                active_groupbox_layout.addWidget(dummyline,j,1,1,1)
-                active_groupbox_layout.addWidget(dummmycombo,j,2,1,1)
+                unitscombo = QComboBox()
+                unitscombo.addItems(['s','m','km','ft','mi','m/s','km/h','ft/s','mph','m/s^2','ft/s^2','deg','rad','deg/s','rad/s','Pa','psi','Unitless'])
+                self.active_groupbox_layout.addWidget(dummylabel,j,0,1,1)
+                self.active_groupbox_layout.addWidget(dummyline,j,1,1,1)
+                self.active_groupbox_layout.addWidget(unitscombo,j,2,1,1)
             
-            self.saveparameters = QPushButton('Save All Parameters and Plot')
-            mainlayout.addWidget(self.saveparameters,1,0,1,groupbox_n)
-            self.show()
+            self.saveparameters = QPushButton('Save All Parameters')
+            self.mainlayout.addWidget(self.saveparameters,1,0,1,groupbox_n)
+        self.show()
+
+        self.savedparameters = [[] for i in range(self.groupbox_n)]
+        QObject.connect(self.saveparameters,SIGNAL('clicked()'),self.save_parameters)
+        
+    def save_parameters(self):
+        for i in range(self.groupbox_n):
+            active_groupbox_layout = self.mainlayout.itemAtPosition(0,i).widget().findChild(QGridLayout)
+            active_groupbox_list = [[active_groupbox_layout.itemAtPosition(j,0).widget().text(),float(active_groupbox_layout.itemAtPosition(j,1).widget().text()),\
+            active_groupbox_layout.itemAtPosition(j,2).widget().currentText()] for j in range(active_groupbox_layout.rowCount())]
+            self.savedparameters[i] = active_groupbox_list
 
 
+
+            
 
 
         #
