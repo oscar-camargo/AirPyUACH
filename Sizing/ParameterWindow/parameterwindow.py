@@ -11,16 +11,18 @@ from Core.Tools.StringBinarySearch import stringbinarysearch
 class ParametersWindow(QWidget):
     def __init__(self,groupbox_n=1,types = [''],conditions=['']):
         super().__init__()
-        self.setGeometry(QRect(100,100,1280,720))
-        mainlayout = QHBoxLayout(self)
+        self.setGeometry(QRect(100,100,1280,500))
+        mainlayout = QGridLayout(self)
         active_condition = {}
         for i in range(groupbox_n):
-            mainlayout.addWidget(QGroupBox(conditions[i]))
+            active_groupbox = QGroupBox(conditions[i])
+            active_groupbox_layout = QGridLayout(active_groupbox)
+            mainlayout.addWidget(active_groupbox,0,i,1,1)
             if types[i] == 'Ground':
                 active_condition = ground._getmethod(stringbinarysearch( ground._conditions(), conditions[i] ))
                 active_condition.popitem()
             elif types[i] == 'Climb':
-                active_condition = climb._getmethod(stringbinarysearch( climb._conditions(), conditions[i] ))
+                active_condition = climb._getmethod( stringbinarysearch( climb._conditions(), conditions[i] ))
                 active_condition.popitem()
             elif types[i] == 'Cruise':
                 active_condition = cruise._getmethod(stringbinarysearch( cruise._conditions(), conditions[i] ))
@@ -39,10 +41,18 @@ class ParametersWindow(QWidget):
                 active_condition.popitem()
             else:
                 pass
-            print(active_condition)
-        
-        self.show()
-        
+            for key,j in zip(active_condition,range(len(active_condition))):
+                dummylabel = QLabel('{}'.format(key))
+                dummyline = QLineEdit()
+                dummmycombo = QComboBox()
+                active_groupbox_layout.addWidget(dummylabel,j,0,1,1)
+                active_groupbox_layout.addWidget(dummyline,j,1,1,1)
+                active_groupbox_layout.addWidget(dummmycombo,j,2,1,1)
+            
+            self.saveparameters = QPushButton('Save All Parameters and Plot')
+            mainlayout.addWidget(self.saveparameters,1,0,1,groupbox_n)
+            self.show()
+
 
 
 
