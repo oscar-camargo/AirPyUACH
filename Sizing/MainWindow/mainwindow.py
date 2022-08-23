@@ -45,18 +45,20 @@ class MainWindow(QMainWindow):
         self.analyseslayout.setContentsMargins(0, 0, 0, 0)
         
         #Tree and buttons widgets
-        self.add_before_analyses = QPushButton('Add Before',self.analyses_layout_widget)
         self.add_after_analyses = QPushButton('Add After',self.analyses_layout_widget)
         self.remove_analyses = QPushButton('Remove',self.analyses_layout_widget)
         self.tree = QTreeWidget(self.analyses_layout_widget)
+        self.tree.headerItem().setText(0,'Analyses')
+        dummy_analysis = QTreeWidgetItem(self.tree)
+        dummy_analysis.setText(0,'1')
+        dummy_analysis.setSelected(True)
         self.export_plots = QPushButton('Export Plots as Images',self.analyses_layout_widget)
         self.export_data_csv = QPushButton('Export Data as CSV',self.analyses_layout_widget)
-        self.analyseslayout.addWidget(self.add_before_analyses,0,0,1,1)
-        self.analyseslayout.addWidget(self.add_after_analyses,0,1,1,1)
-        self.analyseslayout.addWidget(self.remove_analyses,0,2,1,1)
-        self.analyseslayout.addWidget(self.tree,1,0,1,3)
-        self.analyseslayout.addWidget(self.export_plots,2,0,1,3)
-        self.analyseslayout.addWidget(self.export_data_csv,3,0,1,3)
+        self.analyseslayout.addWidget(self.add_after_analyses,0,0,1,1)
+        self.analyseslayout.addWidget(self.remove_analyses,0,1,1,1)
+        self.analyseslayout.addWidget(self.tree,1,0,1,2)
+        self.analyseslayout.addWidget(self.export_plots,2,0,1,2)
+        self.analyseslayout.addWidget(self.export_data_csv,3,0,1,2)
         self.analysis_types = []
         self.analysis_conditions = []
         self.analysis_conditions_parameters = []
@@ -174,6 +176,10 @@ class MainWindow(QMainWindow):
         QObject.connect(self.remove_mission, SIGNAL('clicked()'),self.mission_remove)
         QObject.connect(self.clear_mission, SIGNAL('clicked()'),self.mission_clear)
         QObject.connect(self.configure_mission,SIGNAL('clicked()'),self.configmission)
+        
+        QObject.connect(self.add_after_analyses, SIGNAL('clicked()'),self.add_row_after_analyses)
+        QObject.connect(self.remove_analyses,SIGNAL('clicked()'),self.analyses_remove)
+        
         self.missiontypecombo.currentTextChanged.connect(self.combochange)
         
         
@@ -209,6 +215,17 @@ class MainWindow(QMainWindow):
         else:
             pass
 
+    def add_row_after_analyses(self):
+        new = QTreeWidgetItem(self.tree)
+        new.setText(0,'{}'.format(self.tree.topLevelItemCount()))
+        
+
+    def analyses_remove(self):
+        if self.tree.currentIndex().row() != 0:
+            self.tree.takeTopLevelItem(self.tree.currentIndex().row())
+        else:
+            pass
+
     def mission_clear(self):
         self.table_mission.setRowCount(1)
 
@@ -240,7 +257,17 @@ class MainWindow(QMainWindow):
         types = [self.table_mission.cellWidget(i,0).currentText() for i in range(row_n)]
         conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(row_n)]
         self.mission_configuration = ParametersWindow(row_n,types,conditions)
+        currentanalysis = self.tree.selectedItems()[0]
+        currentanalysis.takeChildren()
+        for i in range(row_n):
+            segment = QTreeWidgetItem(currentanalysis)
+            segment.setText(0,types[i])
+        QObject.connect(self.mission_configuration.saveparameters,SIGNAL('clicked()'),self.receive_parameters(self.mission_configuration.savedparameters))
+        
 
+    def receive_parameters(self,data):
+        self.parameters = data
+        
         #--------------------------#
 app = QApplication(sys.argv)
 window = MainWindow()

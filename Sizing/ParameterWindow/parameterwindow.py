@@ -56,10 +56,9 @@ class ParametersWindow(QWidget):
             self.saveparameters = QPushButton('Save All Parameters')
             self.mainlayout.addWidget(self.saveparameters,1,0,1,groupbox_n)
         self.show()
-
         self.savedparameters = [[] for i in range(self.groupbox_n)]
         QObject.connect(self.saveparameters,SIGNAL('clicked()'),self.save_parameters)
-        
+
     def save_parameters(self):
         for i in range(self.groupbox_n):
             active_groupbox_layout = self.mainlayout.itemAtPosition(0,i).widget().findChild(QGridLayout)
@@ -67,10 +66,4 @@ class ParametersWindow(QWidget):
             active_groupbox_layout.itemAtPosition(j,2).widget().currentText()] for j in range(active_groupbox_layout.rowCount())]
             self.savedparameters[i] = active_groupbox_list
 
-
-
-            
-
-
-        #
 
