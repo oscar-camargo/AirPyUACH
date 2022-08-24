@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         mainlayout.addWidget(self.constraint_groupbox,1,2,1,1)
         
         #--------------------------------------------#
-        
+
 
         #--------UI Signals--------#
         
@@ -253,20 +253,28 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
-        row_n = self.table_mission.rowCount()
-        types = [self.table_mission.cellWidget(i,0).currentText() for i in range(row_n)]
-        conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(row_n)]
-        self.mission_configuration = ParametersWindow(row_n,types,conditions)
-        currentanalysis = self.tree.selectedItems()[0]
-        currentanalysis.takeChildren()
-        for i in range(row_n):
-            segment = QTreeWidgetItem(currentanalysis)
-            segment.setText(0,types[i])
-        QObject.connect(self.mission_configuration.saveparameters,SIGNAL('clicked()'),self.receive_parameters(self.mission_configuration.savedparameters))
-        
+        self.row_n = self.table_mission.rowCount()
+        self.types = [self.table_mission.cellWidget(i,0).currentText() for i in range(self.row_n)]
+        self.conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(self.row_n)]
+        self.mission_configuration = ParametersWindow(self.row_n,self.types,self.conditions)
+        self.mission_configuration.show()
+        self.currentanalysis = self.tree.selectedItems()[0]
+        self.currentanalysis.takeChildren()
+        for i in range(self.row_n):
+            self.segment = QTreeWidgetItem(self.currentanalysis)
+            self.segment.setText(0,self.types[i])
+        #Signal that connects parameters window inputs to the analysis tree widget
+        QObject.connect(self.mission_configuration.saveparameters,SIGNAL('clicked()'),self.tree_parameters)
 
-    def receive_parameters(self,data):
-        self.parameters = data
+    def tree_parameters(self):
+        for i in range(self.row_n):
+            self.current_segment = self.currentanalysis.child(i)
+            self.current_condition = QTreeWidgetItem(self.current_segment)
+            self.current_condition.setText(0,'{}'.format(self.conditions[i]))
+            for param in self.mission_configuration.savedparameters[i]:
+                self.current_parameter = QTreeWidgetItem(self.current_condition)
+                self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
+
         
         #--------------------------#
 app = QApplication(sys.argv)

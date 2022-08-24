@@ -55,9 +55,9 @@ class ParametersWindow(QWidget):
             
             self.saveparameters = QPushButton('Save All Parameters')
             self.mainlayout.addWidget(self.saveparameters,1,0,1,groupbox_n)
-        self.show()
+
         self.savedparameters = [[] for i in range(self.groupbox_n)]
-        QObject.connect(self.saveparameters,SIGNAL('clicked()'),self.save_parameters)
+        
 
     def save_parameters(self):
         for i in range(self.groupbox_n):
