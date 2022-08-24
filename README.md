@@ -9,7 +9,7 @@ Often enough, I found myself in a tight spot where there's just too much informa
 
 # To Do
 ### Well-defined Modules
-- [ ] Sizing Main Window Frontend
+- [x] Sizing Main Window Frontend
 - [x] Sizing Secondary Windows Frontend
 - [ ] Sizing Backend
 ### Planned modules, not well-defined yet.
