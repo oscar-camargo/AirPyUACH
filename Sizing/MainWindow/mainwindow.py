@@ -144,13 +144,28 @@ class MainWindow(QMainWindow):
         constraintPolicy.setHeightForWidth(self.constraint_groupbox.sizePolicy().hasHeightForWidth())
         self.constraint_groupbox.setSizePolicy(constraintPolicy)
 
-        #Mission grid layout
+        #Constraint grid layout
         self.constraint_layout_widget = QWidget(self.constraint_groupbox)
         self.constraint_layout_widget.setGeometry(QRect(10,30,420,420))
         self.constraint_layout = QGridLayout(self.constraint_layout_widget)
         
         #Buttons and table
         self.constraint_table = QTableWidget(1,3,self.constraint_layout_widget)
+        self.constraint_parameters = [' Air Density',' Vstall',' Vv',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Takeoff Distance ',' Prop \u03B7']
+        self.constraint_units = [' kg/m3',' m/s',' m/s',' --',' --',' --',' --',' --',' --',' m ',' --']
+        self.constraint_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)   
+        self.constraint_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+        self.constraint_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
+        constraint_first_param = QLabel(self.constraint_parameters[0],self.constraint_table.cellWidget(0,0))
+        self.constraint_table.setCellWidget(0,0,constraint_first_param)
+        for i in range(1,11):
+            self.constraint_table.insertRow(i)
+            constraint_first_param = QLabel(self.constraint_parameters[i],self.constraint_table.cellWidget(i,0))
+            self.constraint_table.setCellWidget(i,0,constraint_first_param)
+        for i in range(11):
+            unitscombo = QComboBox()
+            unitscombo.addItems(self.constraint_units[i])
+            self.constraint_table.setCellWidget(i,2,unitscombo)
         self.clear_constraint = QPushButton('Clear All',self.constraint_layout_widget)
         self.plot_diagram = QPushButton('Plot Diagram',self.constraint_layout_widget)
         self.constraint_layout.addWidget(self.constraint_table,0,0,1,2)
