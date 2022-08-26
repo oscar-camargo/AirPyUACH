@@ -7,6 +7,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from Sizing.ParameterWindow.parameterwindow import ParametersWindow
+from Sizing.Methods import constraint_analysis as ca
+
 
 class MainWindow(QMainWindow):
 
@@ -152,7 +154,6 @@ class MainWindow(QMainWindow):
         #Buttons and table
         self.constraint_table = QTableWidget(1,3,self.constraint_layout_widget)
         self.constraint_parameters = [' Air Density',' Vstall',' Vv',' Takeoff Distance ',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Prop \u03B7']
-        self.constraint_units = [' kg/m3',' m/s',' m/s',' --',' --',' --',' --',' --',' --',' m ',' --']
         self.constraint_units_length = ['m','km','ft','mi']
         self.constraint_units_density = ['kg/m3','slug/ft3']
         self.constraint_units_velocity = ['m/s','ft/s','km/h','mph','kts']
