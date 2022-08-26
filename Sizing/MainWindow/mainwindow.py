@@ -151,8 +151,11 @@ class MainWindow(QMainWindow):
         
         #Buttons and table
         self.constraint_table = QTableWidget(1,3,self.constraint_layout_widget)
-        self.constraint_parameters = [' Air Density',' Vstall',' Vv',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Takeoff Distance ',' Prop \u03B7']
+        self.constraint_parameters = [' Air Density',' Vstall',' Vv',' Takeoff Distance ',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Prop \u03B7']
         self.constraint_units = [' kg/m3',' m/s',' m/s',' --',' --',' --',' --',' --',' --',' m ',' --']
+        self.constraint_units_length = ['m','km','ft','mi']
+        self.constraint_units_density = ['kg/m3','slug/ft3']
+        self.constraint_units_velocity = ['m/s','ft/s','km/h','mph','kts']
         self.constraint_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)   
         self.constraint_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.constraint_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
@@ -163,9 +166,15 @@ class MainWindow(QMainWindow):
             constraint_first_param = QLabel(self.constraint_parameters[i],self.constraint_table.cellWidget(i,0))
             self.constraint_table.setCellWidget(i,0,constraint_first_param)
         for i in range(11):
-            unitscombo = QComboBox()
-            unitscombo.addItems(self.constraint_units[i])
-            self.constraint_table.setCellWidget(i,2,unitscombo)
+            if i < 4:
+                self.constraint_table.setCellWidget(i,2,QComboBox())
+            else:
+                self.constraint_table.setCellWidget(i,2,QLabel(' Dimensionless'))
+        self.constraint_table.cellWidget(0,2).addItems(self.constraint_units_density)
+        self.constraint_table.cellWidget(1,2).addItems(self.constraint_units_velocity)
+        self.constraint_table.cellWidget(2,2).addItems(self.constraint_units_velocity)
+        self.constraint_table.cellWidget(3,2).addItems(self.constraint_units_length)
+        
         self.clear_constraint = QPushButton('Clear All',self.constraint_layout_widget)
         self.plot_diagram = QPushButton('Plot Diagram',self.constraint_layout_widget)
         self.constraint_layout.addWidget(self.constraint_table,0,0,1,2)
