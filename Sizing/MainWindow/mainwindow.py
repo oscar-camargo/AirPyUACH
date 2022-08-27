@@ -7,7 +7,8 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from Sizing.ParameterWindow.parameterwindow import ParametersWindow
-from Sizing.Methods import constraint_analysis as ca
+import Sizing.Methods.constraint_analysis as ca
+from pint import UnitRegistry
 
 
 class MainWindow(QMainWindow):
@@ -155,7 +156,7 @@ class MainWindow(QMainWindow):
         self.constraint_table = QTableWidget(1,3,self.constraint_layout_widget)
         self.constraint_parameters = [' Air Density',' Vstall',' Vv',' Takeoff Distance ',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Prop \u03B7']
         self.constraint_units_length = ['m','km','ft','mi']
-        self.constraint_units_density = ['kg/m3','slug/ft3']
+        self.constraint_units_density = ['kg/m**3','slug/ft**3']
         self.constraint_units_velocity = ['m/s','ft/s','km/h','mph','kts']
         self.constraint_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)   
         self.constraint_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
@@ -181,6 +182,7 @@ class MainWindow(QMainWindow):
         self.constraint_layout.addWidget(self.constraint_table,0,0,1,2)
         self.constraint_layout.addWidget(self.clear_constraint,1,0,1,1)
         self.constraint_layout.addWidget(self.plot_diagram,1,1,1,1)
+        self.constraint_values = [ [ [' '],[0],[' '] ] for i in range(11) ]
         #------------------------------#
 
 
@@ -193,6 +195,10 @@ class MainWindow(QMainWindow):
         
         #--------------------------------------------#
 
+        #---------PINT Units Registry Declaration----------#
+        #Important for handling different unit systems
+        self.ureg = UnitRegistry()
+
 
         #--------UI Signals--------#
         
@@ -204,10 +210,11 @@ class MainWindow(QMainWindow):
         
         QObject.connect(self.add_after_analyses, SIGNAL('clicked()'),self.add_row_after_analyses)
         QObject.connect(self.remove_analyses,SIGNAL('clicked()'),self.analyses_remove)
+        QObject.connect(self.plot_diagram,SIGNAL('clicked()'),self.set_constraint_parameters)
         
         self.missiontypecombo.currentTextChanged.connect(self.combochange)
         
-        
+        self.missionparameters = 0
         #--------------------------#
 
 
@@ -300,6 +307,15 @@ class MainWindow(QMainWindow):
                 self.current_parameter = QTreeWidgetItem(self.current_condition)
                 self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
 
+    def set_constraint_parameters(self):
+        self.constraint_setup = ca.configuration()
+        for i in range(11):
+            self.constraint_setup.values[i][0] = self.constraint_table.cellWidget(i,0).text()
+            if i < 4:
+                self.constraint_setup.values[i][1] = float(self.constraint_table.item(i,1).text())*self.ureg(self.constraint_table.cellWidget(i,2).currentText())
+            else:
+                pass
+            
         
         #--------------------------#
 app = QApplication(sys.argv)

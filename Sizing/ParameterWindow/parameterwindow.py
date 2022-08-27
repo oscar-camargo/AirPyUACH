@@ -66,4 +66,5 @@ class ParametersWindow(QWidget):
             active_groupbox_layout.itemAtPosition(j,2).widget().currentText()] for j in range(active_groupbox_layout.rowCount())]
             self.savedparameters[i] = active_groupbox_list
 
+    
 
