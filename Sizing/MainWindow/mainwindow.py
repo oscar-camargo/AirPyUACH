@@ -308,14 +308,19 @@ class MainWindow(QMainWindow):
                 self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
 
     def set_constraint_parameters(self):
-        self.constraint_setup = ca.configuration()
+        vals = [['',None] for i in range(11)]
         for i in range(11):
-            self.constraint_setup.values[i][0] = self.constraint_table.cellWidget(i,0).text()
+            vals[i][0] = self.constraint_table.cellWidget(i,0).text()
             if i < 4:
-                self.constraint_setup.values[i][1] = float(self.constraint_table.item(i,1).text())*self.ureg(self.constraint_table.cellWidget(i,2).currentText())
+                vals[i][1] = float(self.constraint_table.item(i,1).text())*self.ureg(self.constraint_table.cellWidget(i,2).currentText())
             else:
-                pass
-            
+                vals[i][1] = float(self.constraint_table.item(i,1).text())
+        self.constraint_setup = ca.configuration()
+        self.constraint_setup.values = vals
+        self.constraint_setup.setdefaults()
+        self.constraint_setup.constraint_variables(self.constraint_setup.values)
+        
+
         
         #--------------------------#
 app = QApplication(sys.argv)
