@@ -6,8 +6,9 @@ sys.path.append('C:\\Users\\Oscar Camargo\\UACH\\AirPyUACH')
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-from Sizing.ParameterWindow.parameterwindow import ParametersWindow
 import Sizing.Methods.constraint_analysis as ca
+from Sizing.Parameters.mission_parameters import *
+from Core.Tools.StringBinarySearch import stringbinarysearch
 from pint import UnitRegistry
 
 
@@ -151,38 +152,18 @@ class MainWindow(QMainWindow):
         self.constraint_layout_widget = QWidget(self.constraint_groupbox)
         self.constraint_layout_widget.setGeometry(QRect(10,30,420,420))
         self.constraint_layout = QGridLayout(self.constraint_layout_widget)
-        
-        #Buttons and table
-        self.constraint_table = QTableWidget(1,3,self.constraint_layout_widget)
-        self.constraint_parameters = [' Air Density',' Vstall',' Vv',' Takeoff Distance ',' CDmin',' AR',' Load Factor',' Oswald eff.',' CLmax',' CL_TO',' Prop \u03B7']
-        self.constraint_units_length = ['m','km','ft','mi']
-        self.constraint_units_density = ['kg/m**3','slug/ft**3']
-        self.constraint_units_velocity = ['m/s','ft/s','km/h','mph','kts']
-        self.constraint_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)   
-        self.constraint_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.constraint_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
-        constraint_first_param = QLabel(self.constraint_parameters[0],self.constraint_table.cellWidget(0,0))
-        self.constraint_table.setCellWidget(0,0,constraint_first_param)
-        for i in range(1,11):
-            self.constraint_table.insertRow(i)
-            constraint_first_param = QLabel(self.constraint_parameters[i],self.constraint_table.cellWidget(i,0))
-            self.constraint_table.setCellWidget(i,0,constraint_first_param)
-        for i in range(11):
-            if i < 4:
-                self.constraint_table.setCellWidget(i,2,QComboBox())
-            else:
-                self.constraint_table.setCellWidget(i,2,QLabel(' Dimensionless'))
-        self.constraint_table.cellWidget(0,2).addItems(self.constraint_units_density)
-        self.constraint_table.cellWidget(1,2).addItems(self.constraint_units_velocity)
-        self.constraint_table.cellWidget(2,2).addItems(self.constraint_units_velocity)
-        self.constraint_table.cellWidget(3,2).addItems(self.constraint_units_length)
-        
-        self.clear_constraint = QPushButton('Clear All',self.constraint_layout_widget)
-        self.plot_diagram = QPushButton('Plot Diagram',self.constraint_layout_widget)
-        self.constraint_layout.addWidget(self.constraint_table,0,0,1,2)
-        self.constraint_layout.addWidget(self.clear_constraint,1,0,1,1)
-        self.constraint_layout.addWidget(self.plot_diagram,1,1,1,1)
-        self.constraint_values = [ [ [' '],[0],[' '] ] for i in range(11) ]
+        self.constraintdescription = QLabel('Select a Mission Condition')
+        self.conditionlabel = QLabel('')
+        self.segmentcombo = QComboBox()
+        self.active_layout_widget = QWidget()
+        self.active_layout = QGridLayout(self.active_layout_widget)
+
+        self.constraint_layout.addWidget(self.constraintdescription,0,0,1,3)
+        self.constraint_layout.addWidget(self.segmentcombo,1,0,1,3)
+        self.constraint_layout.addWidget(self.conditionlabel,2,0,1,3)
+        self.constraint_layout.addWidget(self.active_layout_widget,3,0,1,3)
+
+
         #------------------------------#
 
 
@@ -210,7 +191,7 @@ class MainWindow(QMainWindow):
         
         QObject.connect(self.add_after_analyses, SIGNAL('clicked()'),self.add_row_after_analyses)
         QObject.connect(self.remove_analyses,SIGNAL('clicked()'),self.analyses_remove)
-        QObject.connect(self.plot_diagram,SIGNAL('clicked()'),self.set_constraint_parameters)
+        #QObject.connect(self.plot_diagram,SIGNAL('clicked()'),self.set_constraint_parameters)
         
         self.missiontypecombo.currentTextChanged.connect(self.combochange)
         
@@ -285,18 +266,89 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
+        self.constraint_layout
         self.row_n = self.table_mission.rowCount()
         self.types = [self.table_mission.cellWidget(i,0).currentText() for i in range(self.row_n)]
-        self.conditions = [self.table_mission.cellWidget(i,1).currentText() for i in range(self.row_n)]
-        self.mission_configuration = ParametersWindow(self.row_n,self.types,self.conditions)
-        self.mission_configuration.show()
+        self.constraint_types = []
+        seen_items = set()
+        seen_i = [1] * 7
+        self.segmentcombo.clear()
+        active_condition = {}
+        self.delete_layout_widgets()
+
+        for i in range(self.row_n):
+            
+            if self.types[i] not in seen_items:
+                seen_items.add(self.types[i])
+                self.constraint_types.append([self.types[i],i])
+            else:
+                if self.types[i] == 'Ground':
+                    seen_i[0] += 1
+                    self.constraint_types.append(['Ground {}'.format(seen_i[0]),i])
+                elif self.types[i] == 'Climb':
+                    seen_i[1] += 1
+                    self.constraint_types.append(['Climb {}'.format(seen_i[1]),i])
+                elif self.types[i] == 'Cruise':
+                    seen_i[2] += 1
+                    self.constraint_types.append(['Cruise {}'.format(seen_i[2]),i])
+                elif self.types[i] == 'Descent':
+                    seen_i[3] += 1
+                    self.constraint_types.append(['Descent {}'.format(seen_i[3]),i])
+                elif self.types[i] == 'Hover':
+                    seen_i[4] += 1
+                    self.constraint_types.append(['Hover {}'.format(seen_i[4]),i])
+                elif self.types[i] == 'Single Point':
+                    seen_i[5] += 1
+                    self.constraint_types.append(['Single Point {}'.format(seen_i[5]),i])
+                elif self.types[i] == 'Transition':
+                    seen_i[6] += 1
+                    self.constraint_types.append(['Transition {}'.format(seen_i[6]),i])
+                else:
+                    pass
+            self.segmentcombo.addItem(self.constraint_types[i][0])
+        
         self.currentanalysis = self.tree.selectedItems()[0]
         self.currentanalysis.takeChildren()
-        for i in range(self.row_n):
-            self.segment = QTreeWidgetItem(self.currentanalysis)
-            self.segment.setText(0,self.types[i])
-        #Signal that connects parameters window inputs to the analysis tree widget
-        QObject.connect(self.mission_configuration.saveparameters,SIGNAL('clicked()'),self.tree_parameters)
+
+        self.selected_type_id = 0
+        self.segmentcombo.currentTextChanged.connect(self.update_constraint)
+        self.selected_type_condition = self.table_mission.cellWidget(self.selected_type_id,1).currentText()
+        self.conditionlabel.setText(self.selected_type_condition)
+
+        if self.segmentcombo.currentText() == 'Ground':
+            active_condition = ground._getmethod(stringbinarysearch( ground._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Climb':
+            active_condition = climb._getmethod( stringbinarysearch( climb._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Cruise':
+            active_condition = cruise._getmethod(stringbinarysearch( cruise._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Descent':
+            active_condition = descent._getmethod(stringbinarysearch( descent._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Hover':
+            active_condition = hover._getmethod(stringbinarysearch( hover._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Single Point':
+            active_condition = single_point._getmethod(stringbinarysearch( single_point._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif self.segmentcombo.currentText() == 'Transition':
+            active_condition = transition._getmethod(stringbinarysearch( transition._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        else:
+            pass
+        for key,j in zip(active_condition,range(len(active_condition))):
+                dummylabel = QLabel('{}'.format(key))
+                dummyline = QLineEdit()
+                unitscombo = QComboBox()
+                unitscombo.addItems(['s','m','km','ft','mi','m/s','km/h','ft/s','mph','m/s^2','ft/s^2','deg','rad','deg/s','rad/s','Pa','psi','Unitless'])
+                self.active_layout.addWidget(dummylabel,j,0,1,1)
+                self.active_layout.addWidget(dummyline,j,1,1,1)
+                self.active_layout.addWidget(unitscombo,j,2,1,1)
+        
+        
+
 
     def tree_parameters(self):
         for i in range(self.row_n):
@@ -307,19 +359,21 @@ class MainWindow(QMainWindow):
                 self.current_parameter = QTreeWidgetItem(self.current_condition)
                 self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
 
-    def set_constraint_parameters(self):
-        vals = [['',None] for i in range(11)]
-        for i in range(11):
-            vals[i][0] = self.constraint_table.cellWidget(i,0).text()
-            if i < 4:
-                vals[i][1] = float(self.constraint_table.item(i,1).text())*self.ureg(self.constraint_table.cellWidget(i,2).currentText())
+    def update_constraint(self):
+        selected_type = self.segmentcombo.currentText()
+        for type in self.constraint_types:
+            if type[0] == selected_type:
+                self.selected_type_id = self.constraint_types.index(type)
             else:
-                vals[i][1] = float(self.constraint_table.item(i,1).text())
-        self.constraint_setup = ca.configuration()
-        self.constraint_setup.values = vals
-        self.constraint_setup.setdefaults()
-        self.constraint_setup.constraint_variables(self.constraint_setup.values)
-        
+                pass
+
+    def delete_layout_widgets(self):
+        if self.active_layout.count() != 0:
+            for i in range(self.active_layout.count()):
+                child = self.active_layout.itemAt(i).widget()
+                child.deleteLater()
+        else:
+            pass
 
         
         #--------------------------#

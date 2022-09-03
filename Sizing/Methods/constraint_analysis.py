@@ -9,10 +9,13 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from pint import UnitRegistry
+#from SUAVE.Attributes.Atmospheres.Earth import US_Standard_1976
 
 
 class configuration():
     def __init__(self):
+        #self.atm = US_Standard_1976()
+        self.altitudes = []
         self.rho = 0
         self.vstall = 0
         self.vv = 0
@@ -29,6 +32,7 @@ class configuration():
         self.vc = 0
         self.g = 9.807
         self.ws = np.linspace(1,150,150)
+        self.mu = 1
 
     def setdefaults(self):
         #Converts every input to International Units. By default, this code and SUAVE work with that system.
@@ -74,5 +78,5 @@ class configuration():
         return (vto**2)/(2*self.g*self.takeoff_distance) + (q_takeoff*cdto)/self.ws + self.mu*(1-(q_takeoff*self.clto)/self.ws)
 
     def cruise(self): #Desired cruise Airspeed
-        q_cruise = 0.5*self.rho*(vc**2)
+        q_cruise = 0.5*self.rho*(self.vc**2)
         return q_cruise*self.cdmin*(1/self.ws) + self.k*(1/q_cruise)*self.ws
