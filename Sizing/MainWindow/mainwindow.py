@@ -162,7 +162,7 @@ class MainWindow(QMainWindow):
         self.constraint_layout.addWidget(self.segmentcombo,1,0,1,3)
         self.constraint_layout.addWidget(self.conditionlabel,2,0,1,3)
         self.constraint_layout.addWidget(self.active_layout_widget,3,0,1,3)
-
+        self.selected_type_id = 0
 
         #------------------------------#
 
@@ -191,9 +191,8 @@ class MainWindow(QMainWindow):
         
         QObject.connect(self.add_after_analyses, SIGNAL('clicked()'),self.add_row_after_analyses)
         QObject.connect(self.remove_analyses,SIGNAL('clicked()'),self.analyses_remove)
-        #QObject.connect(self.plot_diagram,SIGNAL('clicked()'),self.set_constraint_parameters)
-        
         self.missiontypecombo.currentTextChanged.connect(self.combochange)
+        self.segmentcombo.currentTextChanged.connect(self.update_constraint)
         
         self.missionparameters = 0
         #--------------------------#
@@ -266,89 +265,17 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
-        self.constraint_layout
         self.row_n = self.table_mission.rowCount()
         self.types = [self.table_mission.cellWidget(i,0).currentText() for i in range(self.row_n)]
-        self.constraint_types = []
-        seen_items = set()
-        seen_i = [1] * 7
-        self.segmentcombo.clear()
-        active_condition = {}
         self.delete_layout_widgets()
-
-        for i in range(self.row_n):
-            
-            if self.types[i] not in seen_items:
-                seen_items.add(self.types[i])
-                self.constraint_types.append([self.types[i],i])
-            else:
-                if self.types[i] == 'Ground':
-                    seen_i[0] += 1
-                    self.constraint_types.append(['Ground {}'.format(seen_i[0]),i])
-                elif self.types[i] == 'Climb':
-                    seen_i[1] += 1
-                    self.constraint_types.append(['Climb {}'.format(seen_i[1]),i])
-                elif self.types[i] == 'Cruise':
-                    seen_i[2] += 1
-                    self.constraint_types.append(['Cruise {}'.format(seen_i[2]),i])
-                elif self.types[i] == 'Descent':
-                    seen_i[3] += 1
-                    self.constraint_types.append(['Descent {}'.format(seen_i[3]),i])
-                elif self.types[i] == 'Hover':
-                    seen_i[4] += 1
-                    self.constraint_types.append(['Hover {}'.format(seen_i[4]),i])
-                elif self.types[i] == 'Single Point':
-                    seen_i[5] += 1
-                    self.constraint_types.append(['Single Point {}'.format(seen_i[5]),i])
-                elif self.types[i] == 'Transition':
-                    seen_i[6] += 1
-                    self.constraint_types.append(['Transition {}'.format(seen_i[6]),i])
-                else:
-                    pass
-            self.segmentcombo.addItem(self.constraint_types[i][0])
+        self.segmentcombo.clear()
+        for element in self.duplicates(self.types):
+            self.segmentcombo.addItem(element)
         
         self.currentanalysis = self.tree.selectedItems()[0]
         self.currentanalysis.takeChildren()
-
-        self.selected_type_id = 0
-        self.segmentcombo.currentTextChanged.connect(self.update_constraint)
-        self.selected_type_condition = self.table_mission.cellWidget(self.selected_type_id,1).currentText()
-        self.conditionlabel.setText(self.selected_type_condition)
-
-        if self.segmentcombo.currentText() == 'Ground':
-            active_condition = ground._getmethod(stringbinarysearch( ground._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Climb':
-            active_condition = climb._getmethod( stringbinarysearch( climb._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Cruise':
-            active_condition = cruise._getmethod(stringbinarysearch( cruise._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Descent':
-            active_condition = descent._getmethod(stringbinarysearch( descent._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Hover':
-            active_condition = hover._getmethod(stringbinarysearch( hover._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Single Point':
-            active_condition = single_point._getmethod(stringbinarysearch( single_point._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        elif self.segmentcombo.currentText() == 'Transition':
-            active_condition = transition._getmethod(stringbinarysearch( transition._conditions(), self.selected_type_condition ))
-            active_condition.popitem()
-        else:
-            pass
-        for key,j in zip(active_condition,range(len(active_condition))):
-                dummylabel = QLabel('{}'.format(key))
-                dummyline = QLineEdit()
-                unitscombo = QComboBox()
-                unitscombo.addItems(['s','m','km','ft','mi','m/s','km/h','ft/s','mph','m/s^2','ft/s^2','deg','rad','deg/s','rad/s','Pa','psi','Unitless'])
-                self.active_layout.addWidget(dummylabel,j,0,1,1)
-                self.active_layout.addWidget(dummyline,j,1,1,1)
-                self.active_layout.addWidget(unitscombo,j,2,1,1)
         
         
-
 
     def tree_parameters(self):
         for i in range(self.row_n):
@@ -360,22 +287,92 @@ class MainWindow(QMainWindow):
                 self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
 
     def update_constraint(self):
+        self.delete_layout_widgets()
+        self.selected_type_id = 0
         selected_type = self.segmentcombo.currentText()
-        for type in self.constraint_types:
-            if type[0] == selected_type:
-                self.selected_type_id = self.constraint_types.index(type)
-            else:
-                pass
+        for type in self.types:
+            if type in selected_type:
+                self.selected_type_id = self.types.index(type)
+        self.selected_type_condition = self.table_mission.cellWidget(self.selected_type_id,1).currentText()
+        active_condition = {}
+    
+        if 'Ground' in self.segmentcombo.currentText():
+            active_condition = ground._getmethod(stringbinarysearch( ground._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Climb' in self.segmentcombo.currentText():
+            active_condition = climb._getmethod( stringbinarysearch( climb._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Cruise' in self.segmentcombo.currentText():
+            active_condition = cruise._getmethod(stringbinarysearch( cruise._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Descent' in self.segmentcombo.currentText():
+            active_condition = descent._getmethod(stringbinarysearch( descent._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Hover' in self.segmentcombo.currentText():
+            active_condition = hover._getmethod(stringbinarysearch( hover._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Single Point' in self.segmentcombo.currentText():
+            active_condition = single_point._getmethod(stringbinarysearch( single_point._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        elif 'Transition' in self.segmentcombo.currentText():
+            active_condition = transition._getmethod(stringbinarysearch( transition._conditions(), self.selected_type_condition ))
+            active_condition.popitem()
+        else:
+            pass
+        for key,j in zip(active_condition,range(len(active_condition))):
+                dummylabel = QLabel('{}'.format(key))
+                dummyline = QLineEdit()
+                unitscombo = QComboBox()
+                unitscombo.addItems(['s','m','km','ft','mi','m/s','km/h','ft/s','mph','m/s^2','ft/s^2','deg','rad','deg/s','rad/s','Pa','psi','Unitless'])
+                self.constraint_layout.addWidget(dummylabel,j+3,0,1,1)
+                self.constraint_layout.addWidget(dummyline,j+3,1,1,1)
+                self.constraint_layout.addWidget(unitscombo,j+3,2,1,1)
+        
+        self.conditionlabel.setText(self.selected_type_condition)
+
 
     def delete_layout_widgets(self):
-        if self.active_layout.count() != 0:
-            for i in range(self.active_layout.count()):
-                child = self.active_layout.itemAt(i).widget()
+        if self.constraint_layout.count() != 0:
+            for i in (range(self.constraint_layout.count()))[3:]:
+                child = self.constraint_layout.itemAt(i).widget()
                 child.deleteLater()
         else:
             pass
 
-        
+    def duplicates(self,arr):
+        seen_items = set()
+        seen_i = [1] * 7
+        updated_arr = []
+        for i in range(len(arr)):
+            if arr[i] not in seen_items:
+                seen_items.add(arr[i])
+                updated_arr.append(arr[i])
+            else:
+                if arr[i] == 'Ground':
+                    seen_i[0] += 1
+                    updated_arr.append('Ground {}'.format(seen_i[0]))
+                elif arr[i] == 'Climb':
+                    seen_i[1] += 1
+                    updated_arr.append('Climb {}'.format(seen_i[1]))
+                elif arr[i] == 'Cruise':
+                    seen_i[2] += 1
+                    updated_arr.append('Cruise {}'.format(seen_i[2]))
+                elif arr[i] == 'Descent':
+                    seen_i[3] += 1
+                    updated_arr.append('Descent {}'.format(seen_i[3]))
+                elif arr[i] == 'Hover':
+                    seen_i[4] += 1
+                    updated_arr.append('Hover {}'.format(seen_i[4]))
+                elif arr[i] == 'Single Point':
+                    seen_i[5] += 1
+                    updated_arr.append('Single Point {}'.format(seen_i[5]))
+                elif arr[i] == 'Transition':
+                    seen_i[6] += 1
+                    updated_arr.append('Transition {}'.format(seen_i[6]))
+                else:
+                    pass
+        return updated_arr
+
         #--------------------------#
 app = QApplication(sys.argv)
 window = MainWindow()
