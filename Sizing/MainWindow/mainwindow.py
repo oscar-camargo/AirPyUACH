@@ -265,17 +265,18 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
+        
         self.row_n = self.table_mission.rowCount()
         self.types = [self.table_mission.cellWidget(i,0).currentText() for i in range(self.row_n)]
         self.delete_layout_widgets()
         self.segmentcombo.clear()
+        self.params =  dict({})
         for element in self.duplicates(self.types):
             self.segmentcombo.addItem(element)
-        
+            self.params[element] = [[],[],[]]
+
         self.currentanalysis = self.tree.selectedItems()[0]
         self.currentanalysis.takeChildren()
-        
-        
 
     def tree_parameters(self):
         for i in range(self.row_n):
@@ -330,7 +331,6 @@ class MainWindow(QMainWindow):
         
         self.conditionlabel.setText(self.selected_type_condition)
 
-
     def delete_layout_widgets(self):
         if self.constraint_layout.count() != 0:
             for i in (range(self.constraint_layout.count()))[3:]:
@@ -372,6 +372,9 @@ class MainWindow(QMainWindow):
                 else:
                     pass
         return updated_arr
+
+    def take_params(self):
+        return
 
         #--------------------------#
 app = QApplication(sys.argv)
