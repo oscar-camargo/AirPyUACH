@@ -148,20 +148,22 @@ class MainWindow(QMainWindow):
         constraintPolicy.setHeightForWidth(self.constraint_groupbox.sizePolicy().hasHeightForWidth())
         self.constraint_groupbox.setSizePolicy(constraintPolicy)
 
-        #Constraint grid layout
+        #Constraint grid layout and table
         self.constraint_layout_widget = QWidget(self.constraint_groupbox)
         self.constraint_layout_widget.setGeometry(QRect(10,30,420,420))
         self.constraint_layout = QGridLayout(self.constraint_layout_widget)
         self.constraintdescription = QLabel('Select a Mission Condition')
         self.conditionlabel = QLabel('')
         self.segmentcombo = QComboBox()
-        self.active_layout_widget = QWidget()
-        self.active_layout = QGridLayout(self.active_layout_widget)
+        self.constraint_table = QTableWidget()
+        self.saveconstraint = QPushButton('Save Parameters') 
 
         self.constraint_layout.addWidget(self.constraintdescription,0,0,1,3)
         self.constraint_layout.addWidget(self.segmentcombo,1,0,1,3)
         self.constraint_layout.addWidget(self.conditionlabel,2,0,1,3)
-        self.constraint_layout.addWidget(self.active_layout_widget,3,0,1,3)
+        self.constraint_layout.addWidget(self.constraint_table,3,0,1,3)
+        self.constraint_layout.addWidget(self.saveconstraint,4,0,1,3)
+        
         self.selected_type_id = 0
 
         #------------------------------#
@@ -193,6 +195,7 @@ class MainWindow(QMainWindow):
         QObject.connect(self.remove_analyses,SIGNAL('clicked()'),self.analyses_remove)
         self.missiontypecombo.currentTextChanged.connect(self.combochange)
         self.segmentcombo.currentTextChanged.connect(self.update_constraint)
+        QObject.connect(self.saveconstraint,SIGNAL('clicked()'),self.take_params)
         
         self.missionparameters = 0
         #--------------------------#
@@ -265,10 +268,8 @@ class MainWindow(QMainWindow):
             self.table_mission.cellWidget(self.table_mission.currentRow(),1).addItems(['C. Acc. C. Angle Linear Climb', 'C. Acc. C. Pitch Rate C. Alt.'])
 
     def configmission(self):
-        
         self.row_n = self.table_mission.rowCount()
         self.types = [self.table_mission.cellWidget(i,0).currentText() for i in range(self.row_n)]
-        self.delete_layout_widgets()
         self.segmentcombo.clear()
         self.params =  dict({})
         for element in self.duplicates(self.types):
@@ -288,7 +289,9 @@ class MainWindow(QMainWindow):
                 self.current_parameter.setText(0,'{}: {} {}'.format(param[0],param[1],param[2]))
 
     def update_constraint(self):
-        self.delete_layout_widgets()
+        self.constraint_table.setRowCount(1)
+        for i in range(3):
+            self.constraint_table.removeCellWidget(i,0)
         self.selected_type_id = 0
         selected_type = self.segmentcombo.currentText()
         for type in self.types:
@@ -320,24 +323,16 @@ class MainWindow(QMainWindow):
             active_condition.popitem()
         else:
             pass
+        self.constraint_table.setRowCount(len(active_condition))
+        self.constraint_table.setColumnCount(3)
         for key,j in zip(active_condition,range(len(active_condition))):
                 dummylabel = QLabel('{}'.format(key))
-                dummyline = QLineEdit()
                 unitscombo = QComboBox()
                 unitscombo.addItems(['s','m','km','ft','mi','m/s','km/h','ft/s','mph','m/s^2','ft/s^2','deg','rad','deg/s','rad/s','Pa','psi','Unitless'])
-                self.constraint_layout.addWidget(dummylabel,j+3,0,1,1)
-                self.constraint_layout.addWidget(dummyline,j+3,1,1,1)
-                self.constraint_layout.addWidget(unitscombo,j+3,2,1,1)
-        
+                self.constraint_table.setCellWidget(j,0,dummylabel)
+                self.constraint_table.setCellWidget(j,2,unitscombo)
         self.conditionlabel.setText(self.selected_type_condition)
-
-    def delete_layout_widgets(self):
-        if self.constraint_layout.count() != 0:
-            for i in (range(self.constraint_layout.count()))[3:]:
-                child = self.constraint_layout.itemAt(i).widget()
-                child.deleteLater()
-        else:
-            pass
+        self.constraint_layout.addWidget(self.saveconstraint,len(active_condition)+3,0,1,3)
 
     def duplicates(self,arr):
         seen_items = set()
@@ -374,8 +369,11 @@ class MainWindow(QMainWindow):
         return updated_arr
 
     def take_params(self):
-        return
-
+        for i in range(self.constraint_table.rowCount()):
+            self.params[self.segmentcombo.currentText()][0].append(self.constraint_table.cellWidget(i,0).text())
+            self.params[self.segmentcombo.currentText()][1].append(self.constraint_table.item(i,1).text())
+            self.params[self.segmentcombo.currentText()][2].append(self.constraint_table.cellWidget(i,2).currentText())
+        print(self.params)
         #--------------------------#
 app = QApplication(sys.argv)
 window = MainWindow()
